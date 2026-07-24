@@ -22,8 +22,6 @@ interface ApplicationItem {
 }
 
 export default function ApplicationsPage() {
-  const { getToken } = useAuth();
-  
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
   const [selectedApp, setSelectedApp] = useState<ApplicationItem | null>(null);
   const [loading, setLoading] = useState(true);

@@ -121,7 +121,7 @@ export default function SupportPage() {
           category,
           subject,
           message,
-          email: user?.primaryEmailAddress?.emailAddress || 'jobcopilot.ai@gmail.com'
+          email: user?.email || 'jobcopilot.ai@gmail.com'
         })
       });
 
