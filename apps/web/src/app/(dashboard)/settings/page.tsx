@@ -189,41 +189,40 @@ export default function SettingsPage() {
             <img 
               src={avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80'} 
               alt="Avatar" 
-              className={`relative w-20 h-20 rounded-full object-cover border border-white/10 shadow-lg transition duration-200 ${!isEditMode ? 'cursor-pointer hover:scale-105 hover:ring-2 hover:ring-purple-500/50' : 'group-hover:opacity-90'}`}
-              onClick={() => {
-                if (!isEditMode) setViewPhotoModal(true);
-              }}
+              className="relative w-20 h-20 rounded-full object-cover border border-white/10 shadow-lg transition duration-200 cursor-pointer hover:scale-105 hover:ring-2 hover:ring-purple-500/50"
+              onClick={() => setViewPhotoModal(true)}
               onError={(e) => {
                 e.currentTarget.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80';
               }}
             />
-            {/* Hover Camera Icon for upload (Only in Edit Mode) */}
-            {isEditMode && (
-              <label className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 hover:opacity-100 transition duration-200 cursor-pointer">
-                <ImageIcon className="w-5 h-5 text-white" />
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      if (file.size > 2 * 1024 * 1024) {
-                        alert('File size exceeds 2MB limit.');
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.onload = (event) => {
-                        if (event.target?.result) {
-                          setAvatarUrl(event.target.result as string);
-                        }
-                      };
-                      reader.readAsDataURL(file);
+            
+            {/* Always visible Camera Badge for Uploading New Image */}
+            <label className="absolute bottom-0 right-0 p-1.5 bg-purple-600 hover:bg-purple-500 rounded-full cursor-pointer shadow-lg border-2 border-[#0c0c0e] transition-transform hover:scale-110" title="Change Profile Picture">
+              <ImageIcon className="w-3.5 h-3.5 text-white" />
+              <input 
+                type="file" 
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 2 * 1024 * 1024) {
+                      alert('File size exceeds 2MB limit.');
+                      return;
                     }
-                  }}
-                  className="hidden"
-                />
-              </label>
-            )}
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      if (event.target?.result) {
+                        setAvatarUrl(event.target.result as string);
+                        // Auto-save the new avatar immediately
+                        handleSaveProfile(new Event('submit') as any);
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="hidden"
+              />
+            </label>
           </div>
           <div>
             <div className="flex items-center gap-2 justify-center md:justify-start">
