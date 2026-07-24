@@ -30,6 +30,8 @@ export default function ApplicationsPage() {
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const { getToken, user, loading: authLoading } = useAuth();
+
   const [latestResumeId, setLatestResumeId] = useState<string | null>(null);
   const [latestResumeFileName, setLatestResumeFileName] = useState<string | null>(null);
 
@@ -94,9 +96,11 @@ export default function ApplicationsPage() {
   };
 
   useEffect(() => {
-    fetchApplications();
-    fetchLatestResume();
-  }, []);
+    if (!authLoading && user) {
+      fetchApplications();
+      fetchLatestResume();
+    }
+  }, [authLoading, user]);
 
   const handleTriggerAutoApply = async (appId: string) => {
     setApplyingId(appId);

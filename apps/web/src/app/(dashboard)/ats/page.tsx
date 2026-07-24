@@ -49,8 +49,8 @@ interface AtsResult {
   jobTitleMatched: boolean;
 }
 
-export default function AtsPage() {
-  const { getToken } = useAuth();
+export default function AtsScorePage() {
+  const { getToken, user, loading: authLoading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [loading, setLoading] = useState(true);
@@ -115,8 +115,11 @@ export default function AtsPage() {
         await fetchLatestResume();
       }
     };
-    initPage();
-  }, []);
+
+    if (!authLoading && user) {
+      initPage();
+    }
+  }, [authLoading, user]);
 
   const fetchLatestResume = async () => {
     try {

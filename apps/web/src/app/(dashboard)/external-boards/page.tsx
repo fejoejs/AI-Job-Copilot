@@ -81,7 +81,7 @@ interface ExternalJob {
 }
 
 export default function ExternalBoardsPage() {
-  const { getToken } = useAuth();
+  const { getToken, user, loading: authLoading } = useAuth();
   const [jobs, setJobs] = useState<ExternalJob[]>([]);
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -112,8 +112,10 @@ export default function ExternalBoardsPage() {
   };
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    if (!authLoading && user) {
+      fetchJobs();
+    }
+  }, [authLoading, user]);
 
   // When user switches back to this tab, we keep the pending state active so they see the ✓ / ✗ prompts
   useEffect(() => {

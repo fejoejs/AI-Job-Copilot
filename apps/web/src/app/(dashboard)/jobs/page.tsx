@@ -182,7 +182,7 @@ const EXP_COLORS: Record<string, string> = {
 };
 
 export default function JobsPage() {
-  const { getToken } = useAuth();
+  const { getToken, user, loading: authLoading } = useAuth();
   
   const [jobs, setJobs] = useState<JobItem[]>([]);
   const [selectedJob, setSelectedJob] = useState<JobItem | null>(null);
@@ -222,8 +222,10 @@ export default function JobsPage() {
   };
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    if (!authLoading && user) {
+      fetchJobs();
+    }
+  }, [authLoading, user]);
 
   const handleCalculateMatch = async (jobId: string) => {
     setMatchingId(jobId);

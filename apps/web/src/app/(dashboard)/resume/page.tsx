@@ -18,7 +18,7 @@ import {
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function ResumePage() {
-  const { getToken } = useAuth();
+  const { getToken, user, loading: authLoading } = useAuth();
   
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -33,8 +33,10 @@ export default function ResumePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchLatest();
-  }, []);
+    if (!authLoading && user) {
+      fetchLatest();
+    }
+  }, [authLoading, user]);
 
   const fetchLatest = async () => {
     try {

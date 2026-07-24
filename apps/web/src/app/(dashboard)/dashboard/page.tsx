@@ -135,7 +135,7 @@ export default function DashboardPage() {
     };
 
     fetchRealStats();
-  }, [isSetupPending, refreshKey]);
+  }, [isSetupPending, refreshKey, user, getToken]);
 
   // Fetch or init filters
   useEffect(() => {

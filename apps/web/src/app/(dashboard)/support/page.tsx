@@ -31,8 +31,7 @@ interface SupportCase {
 }
 
 export default function SupportPage() {
-  const { getToken } = useAuth();
-  const { user } = useUser();
+  const { getToken, user, loading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -70,9 +69,11 @@ export default function SupportPage() {
   ];
 
   useEffect(() => {
-    fetchCases();
-    markNotificationsAsRead();
-  }, []);
+    if (!authLoading && user) {
+      fetchCases();
+      markNotificationsAsRead();
+    }
+  }, [authLoading, user]);
 
   const fetchCases = async () => {
     try {

@@ -116,6 +116,9 @@ export class ResumeController {
 
   @Get(':id')
   async getResumeById(@GetUserId() userId: string, @Param('id') resumeId: string) {
+    if (!resumeId || resumeId === 'undefined' || resumeId === 'null') {
+      throw new BadRequestException('Invalid resume ID');
+    }
     return this.resumeService.getResumeById(userId, resumeId);
   }
 
@@ -137,6 +140,9 @@ export class ResumeController {
     @Param('id') resumeId: string,
     @Body('targetJobTitle') targetJobTitle?: string,
   ) {
+    if (!resumeId || resumeId === 'undefined' || resumeId === 'null') {
+      throw new BadRequestException('Invalid resume ID');
+    }
     return this.resumeService.analyzeAts(userId, resumeId, targetJobTitle);
   }
 
