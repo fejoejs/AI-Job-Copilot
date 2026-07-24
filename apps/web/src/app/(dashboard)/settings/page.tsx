@@ -15,7 +15,8 @@ import {
   Image as ImageIcon,
   Globe,
   Settings,
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -27,6 +28,10 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  
+  // View/Edit Mode Toggle
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [viewPhotoModal, setViewPhotoModal] = useState(false);
 
   // Profile Form State
   const [name, setName] = useState('');
@@ -153,6 +158,7 @@ export default function SettingsPage() {
       if (res.ok) {
         setFeedback({ type: 'success', message: 'Profile settings updated successfully!' });
         window.dispatchEvent(new Event('profileUpdated'));
+        setIsEditMode(false);
       } else {
         setFeedback({ type: 'error', message: 'Failed to update settings. Please try again.' });
       }
@@ -183,36 +189,41 @@ export default function SettingsPage() {
             <img 
               src={avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80'} 
               alt="Avatar" 
-              className="relative w-20 h-20 rounded-full object-cover border border-white/10 shadow-lg group-hover:opacity-90 transition duration-200"
+              className={`relative w-20 h-20 rounded-full object-cover border border-white/10 shadow-lg transition duration-200 ${!isEditMode ? 'cursor-pointer hover:scale-105 hover:ring-2 hover:ring-purple-500/50' : 'group-hover:opacity-90'}`}
+              onClick={() => {
+                if (!isEditMode) setViewPhotoModal(true);
+              }}
               onError={(e) => {
                 e.currentTarget.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80';
               }}
             />
-            {/* Hover Camera Icon for upload */}
-            <label className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 hover:opacity-100 transition duration-200 cursor-pointer">
-              <ImageIcon className="w-5 h-5 text-white" />
-              <input 
-                type="file" 
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    if (file.size > 2 * 1024 * 1024) {
-                      alert('File size exceeds 2MB limit.');
-                      return;
-                    }
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      if (event.target?.result) {
-                        setAvatarUrl(event.target.result as string);
+            {/* Hover Camera Icon for upload (Only in Edit Mode) */}
+            {isEditMode && (
+              <label className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 hover:opacity-100 transition duration-200 cursor-pointer">
+                <ImageIcon className="w-5 h-5 text-white" />
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 2 * 1024 * 1024) {
+                        alert('File size exceeds 2MB limit.');
+                        return;
                       }
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
-                className="hidden"
-              />
-            </label>
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        if (event.target?.result) {
+                          setAvatarUrl(event.target.result as string);
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="hidden"
+                />
+              </label>
+            )}
           </div>
           <div>
             <div className="flex items-center gap-2 justify-center md:justify-start">
@@ -266,44 +277,71 @@ export default function SettingsPage() {
         
         {/* Row 1: Personal Details Card (Full Width) */}
         <div className="p-6 md:p-8 rounded-2xl border border-white/5 bg-[#0c0c0e]/80 shadow-2xl backdrop-blur-xl space-y-6">
-          <h2 className="text-sm font-bold text-white flex items-center gap-2 border-b border-white/5 pb-3">
-            <UserIcon className="w-4 h-4 text-purple-400" />
-            Personal Details
-          </h2>
+          <div className="flex items-center justify-between border-b border-white/5 pb-3">
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <UserIcon className="w-4 h-4 text-purple-400" />
+              Personal Details
+            </h2>
+            <button
+              type="button"
+              onClick={() => setIsEditMode(!isEditMode)}
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-zinc-300 transition cursor-pointer flex items-center gap-1.5"
+            >
+              {isEditMode ? 'Cancel Edit' : 'Edit Profile'}
+            </button>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex flex-col gap-1.5">
               <span className="font-bold text-[9px] text-zinc-400 uppercase tracking-widest">Full Name</span>
               <div className="relative">
                 <UserIcon className="absolute left-4 top-3 w-3.5 h-3.5 text-zinc-500" />
-                <input placeholder="Enter name" type="text" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)} 
-                  className="w-full bg-neutral-900 border border-white/5 rounded-xl pl-11 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50"
-                  required
-                />
+                {isEditMode ? (
+                  <input placeholder="Enter name" type="text" 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
+                    className="w-full bg-neutral-900 border border-white/5 rounded-xl pl-11 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50"
+                    required
+                  />
+                ) : (
+                  <div className="w-full bg-neutral-900/50 border border-transparent rounded-xl pl-11 pr-4 py-2.5 text-xs text-white">
+                    {name || <span className="text-zinc-600">Not provided</span>}
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="font-bold text-[9px] text-zinc-400 uppercase tracking-widest">Phone Number (with WhatsApp)</span>
               <div className="relative">
                 <Phone className="absolute left-4 top-3 w-3.5 h-3.5 text-zinc-500" />
-                <input placeholder="Enter phone" type="text" 
-                  value={phone} 
-                  onChange={(e) => setPhone(e.target.value)} 
-                  className="w-full bg-neutral-900 border border-white/5 rounded-xl pl-11 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50 font-mono"
-                />
+                {isEditMode ? (
+                  <input placeholder="Enter phone" type="text" 
+                    value={phone} 
+                    onChange={(e) => setPhone(e.target.value)} 
+                    className="w-full bg-neutral-900 border border-white/5 rounded-xl pl-11 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50 font-mono"
+                  />
+                ) : (
+                  <div className="w-full bg-neutral-900/50 border border-transparent rounded-xl pl-11 pr-4 py-2.5 text-xs text-white font-mono">
+                    {phone || <span className="text-zinc-600">Not provided</span>}
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="font-bold text-[9px] text-zinc-400 uppercase tracking-widest">Location / Current City</span>
               <div className="relative">
                 <MapPin className="absolute left-4 top-3 w-3.5 h-3.5 text-zinc-500" />
-                <input placeholder="Enter location" type="text" 
-                  value={location} 
-                  onChange={(e) => setLocation(e.target.value)} 
-                  className="w-full bg-neutral-900 border border-white/5 rounded-xl pl-11 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50"
-                />
+                {isEditMode ? (
+                  <input placeholder="City, Country" type="text" 
+                    value={location} 
+                    onChange={(e) => setLocation(e.target.value)} 
+                    className="w-full bg-neutral-900 border border-white/5 rounded-xl pl-11 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50"
+                  />
+                ) : (
+                  <div className="w-full bg-neutral-900/50 border border-transparent rounded-xl pl-11 pr-4 py-2.5 text-xs text-white">
+                    {location || <span className="text-zinc-600">Not provided</span>}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -465,6 +503,28 @@ export default function SettingsPage() {
         </div>
 
       </form>
+
+      {/* Photo Viewer Modal */}
+      {viewPhotoModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setViewPhotoModal(false)}>
+          <button 
+            type="button"
+            onClick={() => setViewPhotoModal(false)}
+            className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <img 
+            src={avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=800&h=800&q=80'} 
+            alt="Profile View" 
+            className="max-w-full max-h-[80vh] rounded-3xl object-contain shadow-2xl ring-4 ring-white/10"
+            onClick={(e) => e.stopPropagation()}
+            onError={(e) => {
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=800&h=800&q=80';
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

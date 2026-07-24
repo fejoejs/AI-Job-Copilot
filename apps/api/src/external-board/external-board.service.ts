@@ -26,7 +26,7 @@ export class ExternalBoardService {
     return jwt.sign({ userId }, jwtSecret, { expiresIn: '180d' });
   }
 
-  async saveOrRefresh(discoveredByUserId: string, dto: any): Promise<ExternalBoardJob> {
+  async saveOrRefresh(discoveredByUserId: string, dto: any): Promise<ExternalBoardJob | null> {
     const dedupKey = this.extractDedupKey(dto.url);
     const now = new Date();
     
