@@ -29,7 +29,17 @@ export class ExternalBoardService {
   async saveOrRefresh(discoveredByUserId: string, dto: any): Promise<ExternalBoardJob> {
     const dedupKey = this.extractDedupKey(dto.url);
     const now = new Date();
-    const newExpiry = new Date(now.getTime() + this.EXPIRY_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+    
+    // Validate explicit expiry date if provided by the extension
+    if (dto.expiresAt) {
+      const explicitExpiry = new Date(dto.expiresAt);
+      if (explicitExpiry < now) {
+        console.log(`[ExternalBoardService] Skipping expired job from extension: ${dto.title}`);
+        return null;
+      }
+    }
+
+    const newExpiry = dto.expiresAt ? new Date(dto.expiresAt) : new Date(now.getTime() + this.EXPIRY_WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
     const existing = await this.externalBoardJobModel.findOne({ dedupKey });
 
@@ -83,6 +93,14 @@ export class ExternalBoardService {
 
     const query: any = {};
     const conditions: any[] = [];
+
+    // Filter out expired jobs so they don't show up on the frontend
+    conditions.push({
+      $or: [
+        { expiresAt: { $exists: false } },
+        { expiresAt: { $gt: new Date() } }
+      ]
+    });
 
     if (appliedJobIds.length > 0) {
       conditions.push({ _id: { $nin: appliedJobIds } });
