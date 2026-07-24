@@ -1,0 +1,26 @@
+{
+  "name": "@ai-copilot/worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc -w"
+  },
+  "dependencies": {
+    "@ai-copilot/types": "*",
+    "@ai-copilot/utils": "*",
+    "@types/express": "^5.0.6",
+    "bullmq": "^5.8.0",
+    "express": "^5.2.1",
+    "ioredis": "^5.4.1",
+    "mammoth": "^1.7.2",
+    "mongoose": "^8.4.1",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pdf-parse": "^1.1.4",
+    "typescript": "^5.0.0"
+  }
+}

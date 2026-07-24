@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "AI Job Assistant",
+  "version": "1.0.1",
+  "description": "Passively sync jobs viewed on LinkedIn, Indeed, and Naukri to your AI Job Copilot board.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*.linkedin.com/*",
+    "https://*.indeed.com/*",
+    "https://*.naukri.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.linkedin.com/jobs/*"
+      ],
+      "js": [
+        "content-scripts/linkedin.js"
+      ],
+      "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "https://*.indeed.com/*"
+      ],
+      "js": [
+        "content-scripts/indeed.js"
+      ],
+      "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "https://*.naukri.com/*"
+      ],
+      "js": [
+        "content-scripts/naukri.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

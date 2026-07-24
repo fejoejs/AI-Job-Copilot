@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+:root {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --popover: #09090b;
+  --popover-foreground: #fafafa;
+  --primary: #a855f7;
+  --primary-foreground: #fafafa;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #d8b4fe;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glassmorphism card utility */
+.glass-card {
+  background: rgba(24, 24, 27, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 12px 40px 0 rgba(168, 85, 247, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Gradient text */
+.text-gradient {
+  background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Pulse animation for AI actions */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(168, 85, 247, 0.8);
+  }
+}
+
+.ai-glow {
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* Clerk Custom Layout & Theme Fixes */
+.cl-card,
+.cl-main,
+.cl-rootBox {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 100% !important;
+}
+
+/* Hide Clerk branding, footers, and development banners */
+.cl-footer,
+.cl-footerAction,
+.cl-userButtonPopoverFooter,
+div[class*="cl-userButtonPopoverFooter"],
+div[class*="cl-footer"],
+*[class*="cl-developmentMode"],
+*[class*="cl-development-mode"],
+div[class*="developmentMode"],
+a[href*="clerk.com"] {
+  display: none !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+}
+
+/* Custom styling to enforce premium glassmorphism popover layout & correct size */
+div[class*="cl-userButtonPopoverCard"],
+.cl-userButtonPopoverCard {
+  background-color: rgba(16, 16, 20, 0.95) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+  max-width: 290px !important;
+  overflow: hidden !important;
+}
+
+/* User Button Trigger Avatar Circle styling */
+div[class*="cl-userButtonAvatarBox"],
+.cl-userButtonAvatarBox {
+  width: 32px !important;
+  height: 32px !important;
+  border: 1.5px solid rgba(168, 85, 247, 0.3) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+div[class*="cl-userButtonAvatarBox"]:hover,
+.cl-userButtonAvatarBox:hover {
+  border-color: rgba(168, 85, 247, 0.8) !important;
+  transform: scale(1.05);
+}

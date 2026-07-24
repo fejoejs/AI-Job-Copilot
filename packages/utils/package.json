@@ -1,0 +1,18 @@
+{
+  "name": "@ai-copilot/utils",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "nodemailer": "^9.0.3"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^6.4.14",
+    "typescript": "^5.0.0"
+  }
+}

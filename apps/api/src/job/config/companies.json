@@ -1,0 +1,8 @@
+[
+  { "name": "Airbnb", "ats": "greenhouse", "slug": "airbnb", "website": "https://www.airbnb.com" },
+  { "name": "Stripe", "ats": "greenhouse", "slug": "stripe", "website": "https://www.stripe.com" },
+  { "name": "Cloudflare", "ats": "greenhouse", "slug": "cloudflare", "website": "https://www.cloudflare.com" },
+  { "name": "OpenAI", "ats": "ashby", "slug": "openai", "website": "https://www.openai.com" },
+  { "name": "Figma", "ats": "greenhouse", "slug": "figma", "website": "https://www.figma.com" },
+  { "name": "Vercel", "ats": "greenhouse", "slug": "vercel", "website": "https://www.vercel.com" }
+]
