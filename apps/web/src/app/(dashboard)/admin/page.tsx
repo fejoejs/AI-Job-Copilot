@@ -22,7 +22,8 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
-  Sliders
+  Sliders,
+  AlertTriangle
 } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -65,6 +66,37 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Custom Confirm Modal State
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    isDanger?: boolean;
+    onConfirm: () => void;
+    onCancel: () => void;
+  }>({
+    isOpen: false, title: '', message: '', onConfirm: () => {}, onCancel: () => {}
+  });
+
+  const confirmAction = async (title: string, message: string, isDanger = false): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setConfirmDialog({
+        isOpen: true,
+        title,
+        message,
+        isDanger,
+        onConfirm: () => {
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          resolve(true);
+        },
+        onCancel: () => {
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          resolve(false);
+        }
+      });
+    });
+  };
   
   // Database management states
   const [dbStats, setDbStats] = useState<any>(null);
@@ -102,7 +134,7 @@ export default function AdminPage() {
   };
 
   const handleTriggerScraper = async () => {
-    if (!confirm('Are you sure you want to trigger background scraper crawls immediately? This consumes API credits.')) return;
+    if (!(await confirmAction('Trigger Scraper', 'Are you sure you want to trigger background scraper crawls immediately? This consumes API credits.', false))) return;
     setActionLoading('trigger-scraper');
     try {
       const token = await getToken();
@@ -161,7 +193,7 @@ export default function AdminPage() {
   };
 
   const deleteOneJob = async (id: string) => {
-    if (!confirm('Delete this job permanently?')) return;
+    if (!(await confirmAction('Delete Job', 'Delete this job permanently?', true))) return;
     try {
       const token = await getToken();
       const res = await fetch(`${API_BASE}/admin/db/job/${id}?source=${browseSource}`, {
@@ -425,7 +457,7 @@ export default function AdminPage() {
   };
 
   const deleteUser = async (userId: string) => {
-    if (!confirm('Are you absolutely sure you want to delete this user? All their resume profiles and applications will be lost!')) {
+    if (!(await confirmAction('Delete User', 'Are you absolutely sure you want to delete this user? All their resume profiles and applications will be lost!', true))) {
       return;
     }
     setActionLoading(`delete-${userId}`);
@@ -1362,7 +1394,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={async () => {
-                      if (!confirm('Are you sure you want to delete all expired external board jobs?')) return;
+                      if (!(await confirmAction('Delete Expired Jobs', 'Are you sure you want to delete all expired external board jobs?', true))) return;
                       setActionLoading('expired-external');
                       try {
                         const token = await getToken();
@@ -1391,6 +1423,48 @@ export default function AdminPage() {
                   </button>
                 </div>
 
+                {/* Job Board Closed Jobs cleanup */}
+                <div className="p-4 rounded-xl border border-white/5 bg-zinc-950 flex flex-col justify-between gap-3">
+                  <div className="space-y-1">
+                    <span className="text-sm font-bold text-white block">Closed Job Board Jobs</span>
+                    <p className="text-xs text-zinc-500">Deletes jobs from the Main Job Board (Tier 1-3) that have been marked as closed or expired.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!(await confirmAction('Delete Closed Jobs', 'Are you sure you want to delete all closed/expired jobs from the Main Job Board?', true))) return;
+                      setActionLoading('closed-tier1-3');
+                      try {
+                        const token = await getToken();
+                        const res = await fetch(`${API_BASE}/admin/db/cleanup/closed-jobs`, {
+                          method: 'POST',
+                          headers: { 
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify({ olderThanDays: 0 })
+                        });
+                        if (res.ok) {
+                          const data = await res.json();
+                          showFeedback('success', `Cleaned up ${data.deletedCount} closed Job Board jobs.`);
+                          fetchDbAll();
+                        } else {
+                          showFeedback('error', 'Failed to run cleanup.');
+                        }
+                      } catch (err) {
+                        console.error(err);
+                        showFeedback('error', 'Network error.');
+                      } finally {
+                        setActionLoading(null);
+                      }
+                    }}
+                    disabled={actionLoading !== null}
+                    className="py-2.5 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 text-purple-400 text-xs font-bold rounded-xl transition cursor-pointer"
+                  >
+                    {actionLoading === 'closed-tier1-3' ? 'Clearing...' : 'Wipe Closed Jobs'}
+                  </button>
+                </div>
+
                 {/* Wipe All Tier 1-3 Jobs */}
                 <div className="p-4 rounded-xl border border-red-500/20 bg-red-950/5 flex flex-col justify-between gap-3">
                   <div className="space-y-1">
@@ -1403,7 +1477,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={async () => {
-                      if (!confirm('WARNING: Are you absolutely sure you want to delete ALL Tier 1-3 jobs from the database?')) return;
+                      if (!(await confirmAction('Delete Tier 1-3 Jobs', 'WARNING: Are you absolutely sure you want to delete ALL Tier 1-3 jobs from the database?', true))) return;
                       setActionLoading('wipe-tier1-3');
                       try {
                         const token = await getToken();
@@ -1444,7 +1518,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={async () => {
-                      if (!confirm('WARNING: Are you absolutely sure you want to delete ALL External Board jobs from the database?')) return;
+                      if (!(await confirmAction('Delete External Jobs', 'WARNING: Are you absolutely sure you want to delete ALL External Board jobs from the database?', true))) return;
                       setActionLoading('wipe-external');
                       try {
                         const token = await getToken();
@@ -1747,6 +1821,50 @@ export default function AdminPage() {
         )}
       </div>
       </div>
+
+      {/* Custom Confirm Modal */}
+      {confirmDialog.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-zinc-950 border border-white/10 shadow-2xl rounded-2xl p-6 max-w-sm w-full relative overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+            {/* Top gradient line */}
+            <div className={`absolute top-0 left-0 w-full h-1 ${confirmDialog.isDanger ? 'bg-gradient-to-r from-red-500 to-rose-500' : 'bg-gradient-to-r from-purple-500 to-indigo-500'}`} />
+            
+            <div className="flex items-start gap-4">
+              <div className={`p-3 rounded-2xl shrink-0 ring-1 ${confirmDialog.isDanger ? 'bg-red-500/10 ring-red-500/30' : 'bg-purple-500/10 ring-purple-500/30'}`}>
+                {confirmDialog.isDanger ? (
+                  <AlertTriangle className="w-6 h-6 text-red-400" />
+                ) : (
+                  <HelpCircle className="w-6 h-6 text-purple-400" />
+                )}
+              </div>
+              <div className="flex-1 mt-1">
+                <h3 className="text-lg font-bold text-white mb-2">{confirmDialog.title}</h3>
+                <p className="text-zinc-400 text-sm leading-relaxed">{confirmDialog.message}</p>
+              </div>
+            </div>
+            
+            <div className="mt-8 flex justify-end gap-3">
+              <button 
+                onClick={confirmDialog.onCancel}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDialog.onConfirm}
+                className={`px-4 py-2 rounded-xl text-sm font-bold text-white shadow-lg transition-all ${
+                  confirmDialog.isDanger 
+                    ? 'bg-red-600 hover:bg-red-500 shadow-red-500/20 hover:shadow-red-500/40' 
+                    : 'bg-purple-600 hover:bg-purple-500 shadow-purple-500/20 hover:shadow-purple-500/40'
+                }`}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

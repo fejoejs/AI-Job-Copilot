@@ -619,6 +619,26 @@ export class JobService implements OnModuleInit {
 
       // Process all gathered JSearch jobs
       for (const aj of jsearchJobs) {
+        // Validation: Check if the job is explicitly marked as closed or expired
+        if (aj.job_is_closed === true) {
+          console.log(`[JobService] Skipping closed job: ${aj.job_title}`);
+          continue;
+        }
+        
+        if (aj.job_offer_expiration_datetime_utc) {
+          const expiryDate = new Date(aj.job_offer_expiration_datetime_utc);
+          if (expiryDate < new Date()) {
+            console.log(`[JobService] Skipping expired job: ${aj.job_title} (Expired: ${expiryDate.toISOString()})`);
+            continue;
+          }
+        } else if (aj.job_offer_expiration_timestamp) {
+          const expiryDate = new Date(aj.job_offer_expiration_timestamp * 1000);
+          if (expiryDate < new Date()) {
+            console.log(`[JobService] Skipping expired job: ${aj.job_title} (Expired: ${expiryDate.toISOString()})`);
+            continue;
+          }
+        }
+
         const applyUrl = aj.job_apply_link || aj.job_google_link || '';
         const detectedSource = this.detectSource(applyUrl, aj.job_publisher);
         const workType = this.detectWorkType(aj.job_is_remote, aj.work_arrangement);

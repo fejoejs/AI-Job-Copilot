@@ -47,10 +47,11 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       { name: 'validate-ats-config', data: {} },
     );
 
-    // Repeatable digest delivery scheduled for every 6 hours (12am, 6am, 12pm, 6pm)
+    // Digest delivery scheduled for 07:10, 12:10, and 16:10 IST (01:40, 06:40, 10:40 UTC)
+    // This allows a 10-minute window for the global crawl to finish and process jobs before sending notifications.
     await this.notificationQueue.upsertJobScheduler(
-      'send-digest-cron-six-hours',
-      { pattern: '0 */6 * * *' },
+      'send-digest-cron-post-crawl',
+      { pattern: '40 1,6,10 * * *' },
       { name: 'send-digest-cron', data: {} }
     );
   }

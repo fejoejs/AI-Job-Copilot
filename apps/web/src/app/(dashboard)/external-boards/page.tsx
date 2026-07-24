@@ -23,10 +23,49 @@ function decodeHtmlEntities(str: string): string {
     .replace(/&rdquo;/g, '"')
     .replace(/&ndash;/g, '-')
     .replace(/&mdash;/g, '—')
+    .replace(/&lt;br\s*\/?[&gt;]/gi, '\n')
     .replace(/\\n/g, '\n')
     .replace(/\\r/g, '')
     .replace(/\n\s*\n\s*\n+/g, '\n\n')
     .trim();
+}
+
+function formatDescription(text: string) {
+  if (!text) return null;
+  const decoded = decodeHtmlEntities(text);
+  
+  // If it contains obvious HTML tags, render as HTML
+  if (/<(ul|li|p|br|b|strong|i|em|h[1-6])[^>]*>/i.test(decoded)) {
+    return (
+      <div 
+        className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-li:marker:text-purple-500 prose-ul:list-disc prose-ul:pl-5 space-y-3"
+        dangerouslySetInnerHTML={{ __html: decoded }} 
+      />
+    );
+  }
+
+  // Otherwise, smartly format plaintext into paragraphs and bullet lists
+  const paragraphs = decoded.split(/(?:\r?\n){2,}/);
+  return (
+    <div className="space-y-4">
+      {paragraphs.map((p, i) => {
+        // Detect if this paragraph is actually a list
+        const isList = p.includes('\n-') || p.includes('\n*') || p.includes('\n•') || /^[*-•]/.test(p.trim());
+        if (isList) {
+          const lines = p.split(/\r?\n/).filter(l => l.trim().length > 0);
+          return (
+            <ul key={i} className="list-disc pl-5 space-y-1.5 marker:text-purple-500">
+              {lines.map((line, j) => {
+                const cleaned = line.replace(/^[\s*-•]+/, '').trim();
+                return cleaned ? <li key={j}>{cleaned}</li> : null;
+              })}
+            </ul>
+          );
+        }
+        return <p key={i} className="leading-relaxed whitespace-pre-wrap">{p.trim()}</p>;
+      })}
+    </div>
+  );
 }
 
 interface ExternalJob {
@@ -372,8 +411,8 @@ export default function ExternalBoardsPage() {
                   </div>
 
                   {job.shortDescription && (
-                    <div className="text-xs text-neutral-400 bg-neutral-950/40 p-3 rounded-xl border border-white/5 leading-relaxed font-sans line-clamp-2 whitespace-pre-wrap">
-                      {decodeHtmlEntities(job.shortDescription)}
+                    <div className="text-xs text-neutral-400 bg-neutral-950/40 p-3 rounded-xl border border-white/5 leading-relaxed font-sans line-clamp-3 overflow-hidden whitespace-pre-wrap">
+                      {formatDescription(job.shortDescription)}
                     </div>
                   )}
                 </div>
