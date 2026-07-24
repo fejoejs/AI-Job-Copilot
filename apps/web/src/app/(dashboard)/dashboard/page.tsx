@@ -68,51 +68,33 @@ export default function DashboardPage() {
         const token = await getToken();
         if (!token) return;
 
-        // 1. Fetch real applications count
-        const appRes = await fetch(`${API_BASE}/application`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        let appsList = [];
-        if (appRes.ok) {
-          appsList = await appRes.json();
-        }
+        // Run all stats fetches in parallel for massive speedup!
+        const [appRes, matchRes, extRes, resumeRes] = await Promise.all([
+          fetch(`${API_BASE}/application`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_BASE}/job/dashboard`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_BASE}/external-board/list`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ ok: false, json: async () => [] } as any)),
+          fetch(`${API_BASE}/resume/latest`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
 
-        // 2. Fetch real recommendation matches count
-        const matchRes = await fetch(`${API_BASE}/job/dashboard`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        let appsList = [];
+        if (appRes.ok) appsList = await appRes.json();
+
         let recsCount = 0;
         let highMatches = 0;
         if (matchRes.ok) {
           const matchData = await matchRes.json();
-          // /job/dashboard returns a flat array of { job, match } items
-          const jobsList = Array.isArray(matchData)
-            ? matchData
-            : (matchData.recommendations || []);
+          const jobsList = Array.isArray(matchData) ? matchData : (matchData.recommendations || []);
           recsCount = jobsList.length;
           highMatches = jobsList.filter((item: any) => item.match && item.match.matchScore >= 90).length;
         }
 
-        // Fetch external board jobs count to include in total recommendations count
         let extCount = 0;
-        try {
-          const extRes = await fetch(`${API_BASE}/external-board/list`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (extRes.ok) {
+        if (extRes.ok) {
+          try {
             const extJobs = await extRes.json();
-            if (Array.isArray(extJobs)) {
-              extCount = extJobs.length;
-            }
-          }
-        } catch (extErr) {
-          console.warn('Failed to fetch external board count:', extErr);
+            if (Array.isArray(extJobs)) extCount = extJobs.length;
+          } catch (e) {}
         }
-
-        // 3. Check if active Resume Optimizer resume exists
-        const resumeRes = await fetch(`${API_BASE}/resume/latest`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
         
         let atsScore = 0;
         if (resumeRes.ok) {
@@ -166,10 +148,12 @@ export default function DashboardPage() {
       try {
         const token = await getToken();
         
-        // 1. Sync verification status
-        const statusRes = await fetch(`${API_BASE}/auth/status`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // 1. Fetch user verification status and profile simultaneously!
+        const [statusRes, profileRes] = await Promise.all([
+          fetch(`${API_BASE}/auth/status`, { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(`${API_BASE}/user/profile`, { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+
         if (statusRes.ok) {
           const data = await statusRes.json();
           setEmailVerified(data.emailVerified);
@@ -180,10 +164,6 @@ export default function DashboardPage() {
           else localStorage.removeItem('phoneVerified');
         }
 
-        // 2. Fetch user profile containing filters
-        const profileRes = await fetch(`${API_BASE}/user/profile`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
         if (profileRes.ok) {
           const profile = await profileRes.json();
           if (profile && profile.filters) {

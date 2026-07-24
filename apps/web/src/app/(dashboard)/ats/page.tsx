@@ -79,19 +79,8 @@ export default function AtsPage() {
   // Restore states from localStorage on mount
   useEffect(() => {
     const initPage = async () => {
-      try {
-        const featRes = await fetch(`${API_BASE}/public/config/features`);
-        if (featRes.ok) {
-          const featData = await featRes.json();
-          if (featData.feature_ats_enabled === false) {
-            setFeatureEnabled(false);
-            setLoading(false);
-            return;
-          }
-        }
-      } catch (e) {
-        console.error('Failed to fetch features:', e);
-      }
+      // 1. Fire features request immediately
+      const featPromise = fetch(`${API_BASE}/public/config/features`).then(r => r.ok ? r.json() : null).catch(() => null);
 
       const isScanning = localStorage.getItem('ats_scanning') === 'true';
       const cachedResult = localStorage.getItem('ats_result');
@@ -103,10 +92,17 @@ export default function AtsPage() {
       if (cachedResumeName) setResumeName(cachedResumeName);
       if (cachedJobTitle) setTargetJobTitle(cachedJobTitle);
 
+      const featData = await featPromise;
+      if (featData && featData.feature_ats_enabled === false) {
+        setFeatureEnabled(false);
+        setLoading(false);
+        return;
+      }
+
       if (isScanning && cachedResumeId) {
         setScanning(true);
         setScanStep(2);
-        setLoading(false); // Fix loading spinner bug: show parsing/scanning UI immediately
+        setLoading(false); 
         pollResumeStatus(cachedResumeId, cachedJobTitle);
       } else if (cachedResult) {
         try {
