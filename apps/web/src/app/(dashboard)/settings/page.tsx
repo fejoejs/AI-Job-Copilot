@@ -117,28 +117,29 @@ export default function SettingsPage() {
     try {
       const token = await getToken();
       
-      // Update Firebase Auth Profile so the UI (navbar/sidebar) updates instantly!
-      if (name || avatarUrl) {
-        try {
-          const { auth } = await import('@/lib/firebase');
-          if (auth.currentUser) {
-            const { updateProfile } = await import('firebase/auth');
-            const updates: any = {};
-            if (name) updates.displayName = name;
-            if (avatarUrl) {
-              updates.photoURL = avatarUrl;
-              localStorage.setItem('userAvatarUrl', avatarUrl);
+      // Run both Firebase Auth Update and Backend DB update in parallel for lightning speed!
+      const firebaseUpdatePromise = (async () => {
+        if (name || avatarUrl) {
+          try {
+            const { auth } = await import('@/lib/firebase');
+            if (auth.currentUser) {
+              const { updateProfile } = await import('firebase/auth');
+              const updates: any = {};
+              if (name) updates.displayName = name;
+              if (avatarUrl) {
+                updates.photoURL = avatarUrl;
+                localStorage.setItem('userAvatarUrl', avatarUrl);
+              }
+              await updateProfile(auth.currentUser, updates);
+              await auth.currentUser.reload(); // Force Firebase to refresh the user object
             }
-            
-            await updateProfile(auth.currentUser, updates);
-            await auth.currentUser.reload(); // Force Firebase to refresh the user object
+          } catch (fbErr) {
+            console.error("Failed to update Firebase profile:", fbErr);
           }
-        } catch (fbErr) {
-          console.error("Failed to update Firebase profile:", fbErr);
         }
-      }
+      })();
 
-      const res = await fetch(`${API_BASE}/user/profile`, {
+      const backendUpdatePromise = fetch(`${API_BASE}/user/profile`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,6 +155,9 @@ export default function SettingsPage() {
           notifyMatchThreshold
         })
       });
+
+      const [res] = await Promise.all([backendUpdatePromise, firebaseUpdatePromise]);
+
 
       if (res.ok) {
         setFeedback({ type: 'success', message: 'Profile settings updated successfully!' });

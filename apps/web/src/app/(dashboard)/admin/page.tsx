@@ -288,28 +288,23 @@ export default function AdminPage() {
         setConfigs(configMap);
       }
 
-      // Fetch users
-      const usersRes = await fetch(`${API_BASE}/admin/users`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Fetch users, tickets, and integrations in parallel to massively speed up page load!
+      const [usersRes, ticketsRes, integrationsRes] = await Promise.all([
+        fetch(`${API_BASE}/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/admin/tickets`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/job/integrations`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+
       if (usersRes.ok) {
         const usersData = await usersRes.json();
         setUsers(usersData);
       }
 
-      // Fetch tickets
-      const ticketsRes = await fetch(`${API_BASE}/admin/tickets`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
       if (ticketsRes.ok) {
         const ticketsData = await ticketsRes.json();
         setTickets(ticketsData);
       }
 
-      // Fetch dynamic job integrations status
-      const integrationsRes = await fetch(`${API_BASE}/job/integrations`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
       if (integrationsRes.ok) {
         const integrationsData = await integrationsRes.json();
         setApiIntegrations(integrationsData);
